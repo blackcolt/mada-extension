@@ -41,10 +41,10 @@ function showPopup(message) {
 }
 
 function extractNameFromSmallTag() {
-    const smallTag = document.querySelector('.navbar-text small');
-    if (!smallTag) return '';
-    const text = smallTag.textContent.trim();
-    return text.replace(/^(\S+\s+){2}/, '').trim();
+    const small = document.querySelector('.navbar-text small');
+    const text = small?.childNodes[0]?.textContent.trim();
+    const cleaned = text?.replace(/^(\S+\s+\S+\s+)/, '').trim();
+    return cleaned || null;
 }
 
 function checkSchedule(volunteerName) {

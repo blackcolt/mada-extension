@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     func: () => {
                         const small = document.querySelector('.navbar-text small');
                         const text = small?.childNodes[0]?.textContent.trim();
-                        const match = text?.match(/לילה טוב (.+)/);
-                        return match?.[1]?.trim() || null;
+                        const cleaned = text?.replace(/^(\S+\s+\S+\s+)/, '').trim();
+                        return cleaned || null;
                     }
                 },
                 results => {
