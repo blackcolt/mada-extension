@@ -32,10 +32,9 @@ function showPopup(message) {
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0,0,0,0.2);
     `;
+
     document.body.appendChild(div);
-
     document.getElementById('closePopupBtn').addEventListener('click', () => div.remove());
-
     setTimeout(() => {
         if (document.body.contains(div)) div.remove();
     }, 15000);
@@ -43,33 +42,28 @@ function showPopup(message) {
 
 function extractNameFromSmallTag() {
     const smallTag = document.querySelector('.navbar-text small');
-    if (smallTag) {
-        const text = smallTag.textContent.trim();
-        return text.replace(/^(\S+\s+){2}/, '').trim();
-    }
-    return '';
+    if (!smallTag) return '';
+    const text = smallTag.textContent.trim();
+    return text.replace(/^(\S+\s+){2}/, '').trim();
 }
 
 function checkSchedule(volunteerName) {
     const links = document.querySelectorAll('#table_shifts td a');
-    const dates = new Set();
     const today = new Date();
+    const futureDates = new Set();
+
     today.setHours(0, 0, 0, 0);
+
     links.forEach(link => {
-        const nameInCell = link.textContent.trim();
-        if (nameInCell.includes(volunteerName)) {
-            const dateStr = link.getAttribute('data-date');
-            if (dateStr) {
-                const dateObj = new Date(dateStr);
-                if (dateObj >= today) {
-                    dates.add(dateStr);
-                }
-            }
+        const cellName = link.textContent.trim();
+        const dateStr = link.getAttribute('data-date');
+        if (cellName.includes(volunteerName) && dateStr) {
+            if (new Date(dateStr) >= today)
+                futureDates.add(dateStr);
         }
     });
-
-    if (dates.size > 0) {
-        const dateLinks = [...dates].map(date =>
+    if (futureDates.size > 0) {
+        const dateLinks = [...futureDates].map(date =>
             `<a href="#table_shifts" onclick="document.querySelector('[data-date=\\'${date}\\']').scrollIntoView({ behavior: 'smooth', block: 'center' })">${date}</a>`
         );
         showPopup(`יש לך משמרות עתידיות בתאריך:<br>${dateLinks.join('<br>')}`);
@@ -77,23 +71,16 @@ function checkSchedule(volunteerName) {
 }
 
 chrome.storage.sync.get('volunteerName', ({ volunteerName }) => {
-    if (!volunteerName) {
-        const extracted = extractNameFromSmallTag();
-        if (extracted) {
-            chrome.storage.sync.set({ volunteerName: extracted }, () => {
-                showPopup("השם זוהה אוטומטית ונשמר: " + extracted);
-                checkSchedule(extracted);
+    if (volunteerName) {
+        checkSchedule(volunteerName);
+    } else {
+        const extractedName = extractNameFromSmallTag();
+        if (extractedName) {
+            chrome.storage.sync.set({ volunteerName: extractedName }, () => {
+                showPopup(`השם זוהה אוטומטית ונשמר: ${extractedName}`);
+                checkSchedule(extractedName);
             });
         }
-    } else {
-        checkSchedule(volunteerName);
-        const interval = setInterval(() => {
-            const input = document.getElementById('volunteerNameInput');
-            if (input) {
-                input.value = volunteerName;
-                clearInterval(interval);
-            }
-        }, 200);
     }
 });
 
