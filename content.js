@@ -14,7 +14,7 @@ function showPopup(message) {
         max-width: 300px;
     `;
     document.body.appendChild(div);
-    setTimeout(() => div.remove(), 10000);
+    setTimeout(() => div.remove(), 15000);
 }
 
 function showNameInputPopup() {
@@ -87,8 +87,6 @@ chrome.storage.sync.get('volunteerName', ({ volunteerName }) => {
         showNameInputPopup();
     } else {
         checkSchedule(volunteerName);
-
-        // מלא את ה-input אם קיים
         const interval = setInterval(() => {
             const input = document.getElementById('volunteerNameInput');
             if (input) {
