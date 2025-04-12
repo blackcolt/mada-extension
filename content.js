@@ -50,7 +50,7 @@ function extractNameFromSmallTag() {
 function checkSchedule(volunteerName) {
     const links = document.querySelectorAll('#table_shifts td a');
     const today = new Date();
-    const futureDates = new Set();
+    const futureCells = [];
 
     today.setHours(0, 0, 0, 0);
 
@@ -58,17 +58,33 @@ function checkSchedule(volunteerName) {
         const cellName = link.textContent.trim();
         const dateStr = link.getAttribute('data-date');
         if (cellName.includes(volunteerName) && dateStr) {
-            if (new Date(dateStr) >= today)
-                futureDates.add(dateStr);
+            const cellDate = new Date(dateStr);
+            if (cellDate >= today) {
+                futureCells.push({ date: dateStr, volunteerName });
+            }
         }
     });
-    if (futureDates.size > 0) {
-        const dateLinks = [...futureDates].map(date =>
-            `<a href="#table_shifts" onclick="document.querySelector('[data-date=\\'${date}\\']').scrollIntoView({ behavior: 'smooth', block: 'center' })">${date}</a>`
-        );
+
+    if (futureCells.length > 0) {
+        const dateLinks = futureCells.map(({ date, volunteerName }) => `
+            <a href="javascript:void(0)" onclick="(() => {
+                const links = Array.from(document.querySelectorAll('#table_shifts td a'));
+                const match = links.find(a =>
+                    a.getAttribute('data-date') === '${date}' &&
+                    a.textContent.trim().includes('${volunteerName}')
+                );
+                if (match) {
+                    match.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'center' });
+                    match.style.background = '#ffff99'; // הדגשה זמנית
+                    setTimeout(() => match.style.background = '', 2000);
+                }
+            })()">${date}</a>
+        `);
+
         showPopup(`יש לך משמרות עתידיות בתאריך:<br>${dateLinks.join('<br>')}`);
     }
 }
+
 
 chrome.storage.sync.get('volunteerName', ({ volunteerName }) => {
     if (volunteerName) {
